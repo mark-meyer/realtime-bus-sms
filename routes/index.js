@@ -18,8 +18,6 @@ var lowdb_log = require('../lib/lowdb_log_transport')
 
 */
 
-<<<<<<< HEAD
-
 function aboutResponder(req, res, next){
     var message = req.body.Body;
     if (message.trim().toLowerCase() === 'about') {
@@ -30,8 +28,6 @@ function aboutResponder(req, res, next){
     next();
 }
 
-=======
->>>>>>> logging
 function getRoutes(req, res, next){
     var input = req.body.Body;
     if (!input || /^\s*$/.test(input)) {
