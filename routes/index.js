@@ -23,18 +23,6 @@ var lowdb_log = require('../lib/lowdb_log_transport')
 
 */
 
-function sessionID(req,res,next){
-    //logger.debug('cookies:', req.cookies)
-    if('test_cookie' in req.cookies) {
-        logger.debug("cookie found: ", req.cookies['test_cookie']);
-        logger.debug('cookies: ', req.cookies)
-    } else {
-        logger.debug('no cookie')
-         logger.debug('cookies: ', req.cookies)
-    }
-    
-    next();
-}
 
 function aboutResponder(req, res, next){
     var message = req.body.Body;
