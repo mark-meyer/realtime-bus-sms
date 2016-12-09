@@ -1,13 +1,8 @@
 var express = require('express');
-var low = require('lowdb')
 var router = express.Router();
-var stop_number_lookup = require('../lib/stop_number_lookup');
 var debug = require('debug')('routes/index.js');
 var lib = require('../lib/index');
 var config = require('../lib/config');
-
-var db = low('./public/db.json', { storage: require('lowdb/lib/file-async') });
-var db_private = low('./db_private.json', { storage: require('lowdb/lib/file-async') });
 var fs = require('fs');
 
 var twilioClient = require('twilio')(config.TWILIO_ACCOUNT_SID, config.TWILIO_AUTH_TOKEN);
@@ -23,6 +18,7 @@ var lowdb_log = require('../lib/lowdb_log_transport')
 
 */
 
+<<<<<<< HEAD
 
 function aboutResponder(req, res, next){
     var message = req.body.Body;
@@ -34,6 +30,8 @@ function aboutResponder(req, res, next){
     next();
 }
 
+=======
+>>>>>>> logging
 function getRoutes(req, res, next){
     var input = req.body.Body;
     if (!input || /^\s*$/.test(input)) {
@@ -70,7 +68,7 @@ function getRoutes(req, res, next){
     }
 }
 
-// GET home page. 
+/* GET HOME PAGE */
 router.get('/', function(req, res, next) { 
         res.render('index');
     }
@@ -78,7 +76,8 @@ router.get('/', function(req, res, next) {
 
 
 /*  
-    Twilio hits this endpoint. The user's text message is
+    TWILIO ENDPOINT
+    The user's text message is
     in the POST body.
     TODO: better error messages
 */
@@ -99,7 +98,7 @@ router.post('/',
     getRoutes
 );
 
-// This is what the browser hits
+/* BROWSER AJAX ENDPOINT */
 router.post('/ajax', 
     function (req, res, next) {
         res.locals.returnHTML = 1;
@@ -110,9 +109,10 @@ router.post('/ajax',
 );
 
  
-// Routes to allow direct access via url with 
-// either address, stop number, or about.
-
+/*  DIRECT URL ACCESS
+    Routes to allow deep linking and bookmarks via url with 
+    either address, stop number, or about.
+*/
 router.get('/find/about', function(req, res, next) {
     res.locals.returnHTML = 1;
     res.locals.action = "About"
@@ -120,7 +120,7 @@ router.get('/find/about', function(req, res, next) {
 
 });
 
-// :query should be a stop number searches 
+//  :query should be a stop number searches 
 router.get('/find/:query(\\d+)', function(req, res, next) {
     res.locals.action = 'Stop Lookup'
     res.locals.returnHTML = 1;
@@ -135,8 +135,8 @@ router.get('/find/:query(\\d+)', function(req, res, next) {
     });
 });
 
-// :query should be everything other than a stop number
-// - assumes address search 
+//  :query should be everything other than a stop number
+//  - assumes address search 
 router.get('/find/:query', function(req, res, next) {
     res.locals.action = 'Address Lookup'
     res.locals.returnHTML = 1;
@@ -152,7 +152,7 @@ router.get('/find/:query', function(req, res, next) {
 });
 
 
-// a browser with location service enabled can hit this
+//  a browser with location service enabled can hit this
 router.get('/byLatLon', function(req, res, next) {
     res.locals.returnHTML = 1;
 
@@ -187,7 +187,7 @@ router.post('/feedback', function(req, res) {
     res.render('message', {message: {message:'Thanks for the feedback'}});
 });
 
-// Respond to feedback over SMS
+//  Respond to feedback over SMS
 router.get('/respond', function(req, res, next) {
     var comments = JSON.parse(fs.readFileSync('./comments.json'));
     for(var i=comments.comments.length-1; i >= 0; i--) {
