@@ -45,8 +45,8 @@ app.use(logs.initialize((req, res) => {
 
 */
 logs.initGoogleAnalytics((logFields) => {
-    // There shoudl be a UUID in the req.cookie 
-    // But Twilios expire after 4 hous so we'll make a more stable phone-based one
+    // There should be a UUID in the req.cookie 
+    // But Twilios's expire after 4 hous so we'll make a more stable phone-based one
     var uuid;
     var category = logFields.phone ? "sms" : "web";
     if (category == "sms"){
