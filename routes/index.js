@@ -17,8 +17,6 @@ var lowdb_log = require('../lib/lowdb_log_transport')
      '[Failed?]Stop Lookup' '[Failed?]Address Lookup', 'Empty Input', 'About', 'Feedback'
 
 */
-
-
 function blankInputRepsonder(req, res, next){
     var input = req.body.Body;
     if (!input || /^\s*$/.test(input)) {
