@@ -71,12 +71,13 @@ function askWatson(req, res, next){
             // The context.action is set in the Watson Conversation Nodes when we know
             // we need to respond with additional data or our own message.
             // If it's not set, we use the response sent from Watson.
+            console.log("actions: ", response.context.action)
+
             if (!response.context.action) {
                 res.locals.action = 'Watson Chat'
                 res.locals.message = {message:response.output.text.join(' ')}
                 return res.render('message')
             }
-
             switch(response.context.action) {
                 case "Stop Lookup":
                     // Earlier middleware should catch plain stop numbers
@@ -108,12 +109,28 @@ function askWatson(req, res, next){
                         return res.render('message')
                     }
                 case("Address Lookup"):
-                    // The geocoder has already tried and failed to lookup
-                    // but Watson thinks this is an address. It's only a seperate
-                    // case so we can log a failed address lookup
-                    res.locals.action = 'Failed Address Lookup'
-                    res.locals.message = {message:response.output.text.join(' ')}
-                    return res.render('message')
+                    // Watson thinks this is an address
+                    // Try the places api
+
+                    var input = req.body.Body;
+                    res.locals.action = 'Address Lookup'
+                    lib.getStopsFromAddress(input)
+                    .then((routeObject) => {
+                        if (routeObject.data.stops.length < 1) { // Address found, but no stops near address
+                            res.locals.message = { name: "No Stops", message: `Sorry, no stops were found within ${config.NEAREST_BUFFER} mile` + ((config.NEAREST_BUFFER != 1) ? 's' : '' + '.')}
+                            res.render('message')
+                            return
+                        }
+                        res.locals.routes = routeObject;
+                        res.render('route-list')
+                    })
+                    .catch((err) => {
+                        if (err.type == 'NOT_FOUND') return next() // Address not found pass to Watson
+
+                        res.locals.action = 'Failed Address Lookup'
+                        res.render('message', {message: err})
+                    })
+                    return;
 
                 default:
                     // For everything else .
@@ -254,9 +271,9 @@ function addLinkToRequest(req,res, next){
     res.render = function(view, options, callback) {
         _render.call(this, view, options, (err, text) => {
             if (err) return next(err)
-            
+
             res.send(text + message)
-            
+
             // uncomment below when we want to go back to previous behavior
            /* if ( text.length + message.length <= single_message_limit ) {
                 res.send(text + message)
@@ -404,7 +421,7 @@ router.post('/ajax',
     blankInputRepsonder,
     aboutResponder,
     stopNumberResponder,
-    addressResponder,
+    //addressResponder,
     askWatson
 );
 
