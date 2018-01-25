@@ -71,7 +71,6 @@ function askWatson(req, res, next){
             // The context.action is set in the Watson Conversation Nodes when we know
             // we need to respond with additional data or our own message.
             // If it's not set, we use the response sent from Watson.
-            console.log("actions: ", response.context.action)
 
             if (!response.context.action) {
                 res.locals.action = 'Watson Chat'
@@ -109,10 +108,12 @@ function askWatson(req, res, next){
                         return res.render('message')
                     }
                 case("Address Lookup"):
-                    // Watson thinks this is an address
-                    // Try the places api
-
-                    var input = req.body.Body;
+                    // Watson thinks this is an address, try the places API
+                    var known_location = response.entities.filter((element) =>  element['entity'] == "anchorage-location"  );
+                    console.log(known_location)
+                    // If Watson has an entity that correpsonds to input, use it's base value
+                    // otherwise use the raw input. This allows synonyms like 'UAA' to be mapped to 'University of Alaska Anchorage'
+                    var input = known_location.length > 0 ? known_location[0].value : req.body.Body;
                     res.locals.action = 'Address Lookup'
                     lib.getStopsFromAddress(input)
                     .then((routeObject) => {
@@ -125,8 +126,7 @@ function askWatson(req, res, next){
                         res.render('route-list')
                     })
                     .catch((err) => {
-                        if (err.type == 'NOT_FOUND') return next() // Address not found pass to Watson
-
+                        if (err.type == 'NOT_FOUND') return next() // Address not found pass to Watson for default not-found message
                         res.locals.action = 'Failed Address Lookup'
                         res.render('message', {message: err})
                     })
@@ -144,7 +144,6 @@ function askWatson(req, res, next){
 }
 
 /*
-
  MIDDLEWARE FUNCTIONS
  These are primarily concerned with parsing the input the comes in from the POST
  body and deciding how to handle it.
@@ -230,27 +229,6 @@ function stopNumberResponder(req,res, next){
     next()
 }
 
-function addressResponder(req, res, next){
-    var input = req.body.Body;
-    res.locals.action = 'Address Lookup'
-    lib.getStopsFromAddress(input)
-    .then((routeObject) => {
-        if (routeObject.data.stops.length < 1) { // Address found, but no stops near address
-            res.locals.message = { name: "No Stops", message: `Sorry, no stops were found within ${config.NEAREST_BUFFER} mile` + ((config.NEAREST_BUFFER != 1) ? 's' : '' + '.')}
-            res.render('message')
-            return
-        }
-        res.locals.routes = routeObject;
-        res.render('route-list')
-    })
-    .catch((err) => {
-        if (err.type == 'NOT_FOUND') return next() // Address not found pass to Watson
-
-        res.locals.action = 'Failed Address Lookup'
-        res.render('message', {message: err})
-    })
-    return;
-}
 
 function addLinkToRequest(req,res, next){
     // Twilio sms messages over 160 characters are split into
@@ -356,9 +334,6 @@ router.post('/fbhook', function (req, res) {
     }
 });
 
-
-
-
 function sendFBMessage(recipientId, messageText) {
     var messageData = {
         recipient: {
@@ -406,7 +381,6 @@ router.post('/',
     blankInputRepsonder,
     aboutResponder,
     stopNumberResponder,
-    addressResponder,
     askWatson
 );
 
@@ -421,7 +395,6 @@ router.post('/ajax',
     blankInputRepsonder,
     aboutResponder,
     stopNumberResponder,
-    //addressResponder,
     askWatson
 );
 
@@ -447,7 +420,6 @@ router.get('/find/:query', function(req, res, next) {
     sanitizeInput,
     blankInputRepsonder,
     stopNumberResponder,
-    addressResponder,
     askWatson
 );
 
@@ -475,7 +447,6 @@ router.get('/byLatLon', function(req, res, next) {
 
 
 });
-
 
 // feedback form endpoint
 router.post('/feedback', function(req, res) {
